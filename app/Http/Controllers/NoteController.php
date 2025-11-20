@@ -9,7 +9,7 @@ class NoteController extends Controller
 {
     // List notes
     public function list() {
-        return Note::all();
+        return response()->json(Note::all(), 200);
     }
 
     // Create note
@@ -17,35 +17,29 @@ class NoteController extends Controller
     {
         // Validate input
         $validated = $request->validate([
-            'title'  => 'required|string|min:3',
-            'content' => 'required|string|min:10'
+            'title'  => 'required|min:3',
+            'content' => 'required|min:3'
         ]);
 
         // Create instance of note
         $note = Note::create($validated);
 
         // Return response confirming note creation
-        return response()->json([
-            'message' => 'Note created successfully',
-            'note' => $note
-        ], 201);
+        return response()->json($note, 201);
     }
 
     // Retrieve note
-    public function retrieve($id) {
-        return Note::findOrFail($id);
+    public function retrieve(Note $note) {
+        return response()->json($note, 200);
     }
 
     // Update note
-    public function update(Request $request, $id)
+    public function update(Request $request, Note $note)
     {
-        // Find existing note, otherwise return 404
-        $note = Note::findOrFail($id);
-
         // Validate incoming data
         $validated = $request->validate([
-            'title' => 'sometimes|string|min:3',
-            'content'  => 'sometimes|string|min:10',
+            'title'   => 'required|min:3',
+            'content' => 'required|min:3',
         ]);
 
         // Update instance of note
@@ -56,17 +50,12 @@ class NoteController extends Controller
     }
 
     // Delete note
-    public function delete($id)
+    public function delete(Note $note)
     {
-        // Find existing note, otherwise return 404
-        $note = Note::findOrFail($id);
-
         // Delete model
         $note->delete();
 
         // Return response confirming note deletion
-        return response()->json([
-            'message' => 'Post deleted successfully'
-        ], 200);
+        return response()->json(['message' => 'Note deleted successfully'], 200);
     }
 }
