@@ -26,6 +26,8 @@
       :rows="filteredNotes"
       :columns="columns"
       row-key="id"
+      :sort="sort"
+      @update:sort="val => sort.value = val"
     >
     <!-- Actions column for each Note -->
       <template v-slot:body-cell-actions="props">
@@ -85,6 +87,11 @@ export default {
 
     const search = ref("");
 
+    const sort = ref({
+      sortBy: 'id',
+      descending: false,
+    });
+
     // Define computed filter for search
     const filteredNotes = computed(() => {
       if (!search.value) return notes.value;
@@ -101,10 +108,10 @@ export default {
      // Define columns
     const columns = [
       { name: 'id', label: 'ID', field: 'id', sortable: true },
-      { name: 'title', label: 'Title', field: 'title' },
-      { name: 'content', label: 'Content', field: 'content' },
-      { name: 'created_at', label: 'Created At', field: 'created_at' },
-      { name: 'updated_at', label: 'Updated At', field: 'updated_at' },
+      { name: 'title', label: 'Title', field: 'title', sortable: true },
+      { name: 'content', label: 'Content', field: 'content', sortable: true },
+      { name: 'created_at', label: 'Created At', field: 'created_at', sortable: true },
+      { name: 'updated_at', label: 'Updated At', field: 'updated_at', sortable: true },
       { name: 'actions', label: 'Actions', field: 'actions' }
     ];
 
