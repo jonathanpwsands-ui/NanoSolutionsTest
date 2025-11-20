@@ -44,59 +44,56 @@
 </template>
 
 <script>
-import { Notify } from 'quasar';
-import notesApi from '../api/notes';
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import notesApi from "../api/notes";
+import { Notify } from "quasar";
 
 export default {
   name: 'CreateNotePage',
 
-  data() {
-    return {
-      title: '',
-      content: '',
-    };
-  },
+  setup() {
+    const router = useRouter();
 
-  methods: {
-    // Create a new Note
-    async createNote() {
+    const title = ref("");
+    const content = ref("");
+
+    // Create a new note
+    const createNote = async () => {
       try {
         await notesApi.create({
-          title: this.title,
-          content: this.content,
+          title: title.value,
+          content: content.value,
         });
 
-        // Notification for successfully creating a Note
-        Notify.create({
-          type: 'positive',
-          message: 'Note created successfully!',
-          timeout: 1500
-        });
-
-        this.$router.push('/');
+        router.push("/");
       } catch (error) {
         if (error.response?.status === 422) {
           Notify.create({
-            type: 'warning',
-            message: error.response.data.message ?? 'Validation failed!',
-            position: 'top-right',
-            timeout: 1500
+            type: "warning",
+            message: error.response.data.message ?? "Validation error",
+            position: "top-right",
           });
         } else {
           Notify.create({
-            type: 'negative',
-            message: 'Unexpected error occurred. Note creation failed!',
-            position: 'top-right',
-            timeout: 1500
+            type: "negative",
+            message: "Failed to create note",
+            position: "top-right",
           });
         }
       }
-    },
+    };
 
-    // Return to Note List page
-    goBack() {
-      this.$router.push('/');
-    }
-  }
+    const goBack = () => {
+      router.push("/");
+    };
+
+    return {
+      title,
+      content,
+      createNote,
+      goBack,
+    };
+  },
 };
 </script>
