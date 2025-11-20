@@ -2,7 +2,7 @@
 <html>
     <head>
         <title>Notes App</title>
-        @vite('resources/js/app.js')
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body>
         <div id="app"></div>
