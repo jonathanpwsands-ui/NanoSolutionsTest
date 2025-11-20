@@ -4,7 +4,7 @@
     <h4 class="q-mb-lg">New Note</h4>
 
     <!-- Title field -->
-    <q-form @submit.prevent="updateNote">
+    <q-form @submit.prevent="createNote">
       <q-input
         v-model="title"
         label="Title"
@@ -23,7 +23,7 @@
         required
       />
 
-      <!-- Update button -->
+      <!-- Create button -->
       <div class="row q-gutter-sm">
         <q-btn
           label="Create"
@@ -55,11 +55,6 @@ export default {
       title: '',
       content: '',
     };
-  },
-
-  created() {
-    this.noteId = this.$route.params.id;
-    this.loadNote();
   },
 
   methods: {

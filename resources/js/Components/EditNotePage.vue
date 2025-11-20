@@ -44,6 +44,7 @@
 </template>
 
 <script>
+import { Notify } from 'quasar';
 import notesApi from '../api/notes';
 
 export default {
