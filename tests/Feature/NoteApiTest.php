@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
+use App\Models\Note;
 
 class NoteApiTest extends TestCase
 {
@@ -22,7 +22,7 @@ class NoteApiTest extends TestCase
 
         // Assert returned values of each note
         $response->assertJsonStructure([
-            '*' => ['id', 'title', 'contents', 'timestamps']
+            '*' => ['id', 'title', 'content', 'created_at', 'updated_at',]
         ]);
 
         // Assert the number of notes in the response
@@ -30,7 +30,7 @@ class NoteApiTest extends TestCase
     }
 
     // Test to Create Note
-    public function test_create_note()
+    public function test_create_note_success()
     {
          // Data to be posted
         $data = [
@@ -49,7 +49,8 @@ class NoteApiTest extends TestCase
             'id',
             'title',
             'content',
-            'timestamps',
+            'created_at',
+            'updated_at',
         ]);
 
         // Assert that note is in the database
@@ -59,38 +60,51 @@ class NoteApiTest extends TestCase
         ]);
     }
 
+     public function test_create_note_fail()
+    {
+         // Data to be posted
+        $data = [
+            'title' => 'a',
+            'content' => 'con'
+        ];
+
+        // Make POST request
+        $response = $this->postJson('/api/notes', $data);
+
+        // Assert response status is 422 (validation failed)
+        $response->assertStatus(422);
+    }
+
     // Test to Retrieve Note
     public function test_retrieve_note()
     {
         // Create note in the database
-        $post = Post::create([
+        $post = Note::create([
             'title' => 'Note Title',
             'content'  => 'Note content here',
         ]);
 
         // Make GET request to the API route
-        $response = $this->getJson("/api/notes/{$note->id}");
+        $response = $this->getJson("/api/notes/{$post->id}");
 
         // Assert HTTP OK
         $response->assertStatus(200);
 
         // Assert returned values that match the note
         $response->assertJson([
-            'id'    => $note->id,
-            'title' => $note->title,
-            'content'  => $note->content,
-            'timestamps' => $note->timestamps,
+            'id'    => $post->id,
+            'title' => $post->title,
+            'content'  => $post->content,
+            'created_at' => $post->created_at,
+            'updated_at' => $post->updated_at,
         ]);
-
-        // Delete note after test completion
-        $note->delete();
     }
 
     // Test to Update a Note
     public function test_update_note()
     {
         // Create note in the database
-        $post = Post::create([
+        $post = Note::create([
             'title' => 'Original Title',
             'content'  => 'Original Content',
         ]);
@@ -101,27 +115,34 @@ class NoteApiTest extends TestCase
             'content'  => 'Updated Content',
         ];
 
-        try {
-            // Make PUT request to update the note
-            $response = $this->patchJson("/api/notes/{$note->id}", $updateData);
+        // Make PUT request to update the note
+        $response = $this->putJson("/api/notes/{$post->id}", $updateData);
 
-            // Assert HTTP OK
-            $response->assertStatus(200);
+        // Assert HTTP OK
+        $response->assertStatus(200);
 
-            // Assert returned updated values
-            $response->assertJson($updateData);
+        // Assert structure for updated values
+        $response->assertJsonStructure([
+            'id',
+            'title',
+            'content',
+            'created_at',
+            'updated_at',
+        ]);
 
-            // Assert changes in the database
-            $this->assertDatabaseHas('notes', [
-                'id'    => $note->id,
-                'title' => 'Updated Title',
-                'content'  => 'Updated Content',
-            ]);
+        // Assert returned updated values
+        $response->assertJson([
+            'title' => $updateData['title'],
+            'content' => $updateData['content'],
+        ]);
 
-        } finally {
-            // Delete note after test completion
-            $note->delete();
-        }
+
+        // Assert changes in the database
+        $this->assertDatabaseHas('notes', [
+            'id'    => $post->id,
+            'title' => 'Updated Title',
+            'content'  => 'Updated Content',
+        ]);
     }
 
     // Test to Delete a Note
@@ -134,7 +155,7 @@ class NoteApiTest extends TestCase
         ]);
 
         // Send DELETE request to the API route
-        $response = $this->deleteJson("/api/posts/{$note->id}");
+        $response = $this->deleteJson("/api/notes/{$note->id}");
 
         // Assert HTTP OK
         $response->assertStatus(200);
