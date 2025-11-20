@@ -28,7 +28,7 @@
         <q-btn
           label="Update"
           color="primary"
-          type="submit"
+          @click="updateNote"
         />
 
         <!-- Cancel button -->
@@ -44,68 +44,68 @@
 </template>
 
 <script>
-import { Notify } from 'quasar';
-import notesApi from '../api/notes';
+console.log("NOTES API CONTENT:", notesApi);
+import { ref, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import notesApi from "../api/notes";
+import { Notify } from "quasar";
 
 export default {
-  name: 'NoteEditPage',
+  name: "NoteEditPage",
 
-  data() {
-    return {
-      title: '',
-      content: '',
+  setup() {
+    const router = useRouter();
+    const route = useRoute();
+
+    const title = ref("");
+    const content = ref("");
+    const noteId = ref(route.params.id);
+
+    // Load the note to edit
+    const loadNote = async () => {
+      const response = await notesApi.get(noteId.value);
+      title.value = response.data.title;
+      content.value = response.data.content;
     };
-  },
+    
+    // Update the note
+    const updateNote = async () => {
+      console.log("UPDATE FIRING");
+      console.log("notesApi in update()", notesApi);
+      console.log("notesApi.update =", notesApi.update);
 
-  created() {
-    this.noteId = this.$route.params.id;
-    this.loadNote();
-  },
 
-  methods: {
-    // Load Note being edited
-    async loadNote() {
       try {
-        const response = await notesApi.get(this.noteId);
-        this.title = response.data.title;
-        this.content = response.data.content;
-      } catch (error) {
-        console.error('Unable to load note:', error);
-      }
-    },
-
-    // Update Note being edited
-    async updateNote() {
-      try {
-        await notesApi.update(this.noteId, {
-          title: this.title,
-          content: this.content,
+        await notesApi.update(noteId.value, {
+          title: title.value,
+          content: content.value
         });
-
-        this.$router.push('/');
+        console.log("NAVIGATING TO /");
+        router.push("/"); 
       } catch (error) {
-        if (error.response?.status === 422) {
-          Notify.create({
-            type: 'warning',
-            message: error.response.data.message ?? 'Validation failed!',
-            position: 'top-right',
-            timeout: 1500
-          });
-        } else {
-          Notify.create({
-            type: 'negative',
-            message: 'Unexpected error occurred. Note creation failed!',
-            position: 'top-right',
-            timeout: 1500
-          });
-        }
+        console.error("AXIOS ERROR:", error);
+        Notify.create({
+          type: "negative",
+          message: "Failed to update note",
+          position: "top-right",
+          timeout: 1500,
+        });
       }
-    },
+    };
 
-    // Return to Note List page
-    goBack() {
-      this.$router.push('/');
-    }
+    // Return to Note List
+    const goBack = () => {
+      router.push({ path: '/', force: true });
+    };
+
+    onMounted(loadNote);
+
+    return {
+      title,
+      content,
+      updateNote,
+      goBack
+    };
   }
 };
 </script>
