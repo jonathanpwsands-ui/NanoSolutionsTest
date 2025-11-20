@@ -26,12 +26,23 @@
 <script>
 import { Dark } from 'quasar';
 
+
+
 export default {
   name: 'App',
+
+  created() {
+    const saved = localStorage.getItem("darkMode");
+    if (saved) {
+      if (saved === "true") Dark.set(true);
+      else Dark.set(false);
+    }
+  },
 
   methods: {
     toggleDarkMode() {
       Dark.toggle(); // 🌙 toggles dark/light
+      localStorage.setItem("darkMode", Dark.isActive);
     }
   }
 };
