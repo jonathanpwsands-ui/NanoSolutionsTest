@@ -1,59 +1,142 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# NanoSolutions Laravel + Vue (Quasar) Notes Application
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+This project is a full-stack Notes CRUD application built using
+**Laravel**, **Vue 3**, **Quasar**, **Axios**, and **Vite**.\
+It was created as part of a technical assessment and fulfills all
+required functionalities.
 
-## About Laravel
+------------------------------------------------------------------------
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Assessment Requirements Checklist
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Backend
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+-   [x] Laravel project created\
+-   [x] Notes table + model\
+-   [x] REST API routes\
+-   [x] CRUD methods implemented\
+-   [x] Validation for create/update\
+-   [x] JSON responses
 
-## Learning Laravel
+### Frontend
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+-   [x] Vue 3 configured with Vite\
+-   [x] Quasar UI integrated\
+-   [x] Axios API layer (`notes.js`)\
+-   [x] Create Note page\
+-   [x] Edit Note page\
+-   [x] Delete confirmation dialog\
+-   [x] Navigation with Vue Router\
+-   [x] Fully functional CRUD in UI
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+------------------------------------------------------------------------
 
-## Laravel Sponsors
+## ⚙ Installation & Setup
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 1️⃣ Install dependencies
 
-### Premium Partners
+``` bash
+composer install
+npm install
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 2️⃣ Run database migrations
 
-## Contributing
+``` bash
+php artisan migrate
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 3️⃣ Start Laravel backend
 
-## Code of Conduct
+``` bash
+php artisan serve
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 4️⃣ Start Vite frontend
 
-## Security Vulnerabilities
+``` bash
+npm run dev
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+------------------------------------------------------------------------
 
-## License
+## Testing
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+If you want to test the update route:
+
+``` bash
+php artisan tinker
+>>> Note::create(['title' => 'Test', 'content' => 'Example'])
+```
+
+------------------------------------------------------------------------
+
+## API Endpoints
+
+  Method   Endpoint          Description
+  -------- ----------------- -------------------
+  GET      /api/notes        List all notes
+  POST     /api/notes        Create a new note
+  GET      /api/notes/{id}   Retrieve a note
+  PUT      /api/notes/{id}   Update a note
+  DELETE   /api/notes/{id}   Delete a note
+
+------------------------------------------------------------------------
+
+## Features
+
+### ✔ Backend (Laravel)
+
+-   Create, read, update, delete notes
+-   RESTful API routes under `/api`
+-   JSON validation responses
+-   Auto-routed model binding using `Note $note`
+-   Fully tested CRUD functionality
+
+### ✔ Frontend (Vue 3 + Quasar)
+
+-   Note list table with Quasar `<q-table>`
+-   Create Note page
+-   Edit Note page
+-   Delete confirmation modal
+-   Responsive UI styled via Quasar framework
+-   Axios-based API service (`notesApi.js`)
+-   Vue Router for navigation
+-   Hot Module Reloading via Vite
+
+------------------------------------------------------------------------
+
+## 📂 Project Structure
+
+    NanoSolutionsTest/
+    ├── app/
+    ├── public/
+    ├── resources/
+    │   ├── css/
+    │   │   ├── app.css
+    │   │   └── quasar-variables.sass
+    │   ├── js/
+    │       ├── api/notes.js
+    │       ├── pages/
+    │       │   ├── NoteListPage.vue
+    │       │   ├── CreateNotePage.vue
+    │       │   └── EditNotePage.vue
+    │       ├── router.js
+    │       └── app.js
+    ├── routes/api.php
+    ├── routes/web.php
+    ├── vite.config.js
+    └── README.md
+
+------------------------------------------------------------------------
+
+## 📜 License
+
+MIT License --- free to use, modify, and distribute.
+
+------------------------------------------------------------------------
+
+## 🙌 Thank You
+
+Thank you for reviewing this assessment.
+If you have any questions, feel free to ask!
