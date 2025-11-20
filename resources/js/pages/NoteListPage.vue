@@ -2,6 +2,7 @@
 <template>
   <div class="q-pa-md">
     <!-- Add Note button -->
+
     <q-btn
       label="Add Note"
       color="primary"
@@ -9,23 +10,34 @@
       @click="goToCreate"
     />
 
+    <!-- Search bar -->
+    <q-input
+      v-model="search"
+      filled
+      placeholder="Search notes…"
+      class="q-mb-md"
+      debounce="200"
+      clearable
+      prefix="🔍"
+    />
+
     <q-table
       title="Notes"
-      :rows="notes"
+      :rows="filteredNotes"
       :columns="columns"
       row-key="id"
     >
-      <!-- Actions column for each Note -->
+    <!-- Actions column for each Note -->
       <template v-slot:body-cell-actions="props">
         <q-td :props="props">
-
+          
           <!-- Edit Note button -->
           <q-btn
             flat dense color="primary"
             icon="edit"
             @click="editNote(props.row.id)"
           />
-
+          
           <!-- Delete Note button -->
           <q-btn
             flat dense color="negative"
@@ -37,6 +49,7 @@
       </template>
     </q-table>
 
+    
     <!-- Delete confirmation dialog -->
     <q-dialog v-model="deleteDialog">
       <q-card>
@@ -56,29 +69,43 @@
 </template>
 
 <script>
-import { ref, onMounted, watch } from "vue";
-import { useRouter, useRoute } from "vue-router";
-import notesApi from "../api/notes";
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import notesApi from '../api/notes';
 
 export default {
-  name: "NoteListPage",
+  name: 'NoteListPage',
 
   setup() {
     const router = useRouter();
-    const route = useRoute();
 
     const notes = ref([]);
     const deleteDialog = ref(false);
     const noteToDelete = ref(null);
 
-    // Define columns
+    const search = ref("");
+
+    // Define computed filter for search
+    const filteredNotes = computed(() => {
+      if (!search.value) return notes.value;
+
+      const term = search.value.toLowerCase();
+
+      return notes.value.filter(note =>
+        note.title.toLowerCase().includes(term) ||
+        note.content.toLowerCase().includes(term) ||
+        String(note.id).includes(term)
+      );
+    });
+
+     // Define columns
     const columns = [
-      { name: "id", label: "ID", field: "id", sortable: true },
-      { name: "title", label: "Title", field: "title" },
-      { name: "content", label: "Content", field: "content" },
-      { name: "created_at", label: "Created At", field: "created_at" },
-      { name: "updated_at", label: "Updated At", field: "updated_at" },
-      { name: "actions", label: "Actions", field: "actions" }
+      { name: 'id', label: 'ID', field: 'id', sortable: true },
+      { name: 'title', label: 'Title', field: 'title' },
+      { name: 'content', label: 'Content', field: 'content' },
+      { name: 'created_at', label: 'Created At', field: 'created_at' },
+      { name: 'updated_at', label: 'Updated At', field: 'updated_at' },
+      { name: 'actions', label: 'Actions', field: 'actions' }
     ];
 
     // Load notes into table
@@ -87,21 +114,12 @@ export default {
       notes.value = response.data;
     };
 
-    onMounted(loadNotes);
-
-    watch(
-      () => route.fullPath,
-      () => {
-        loadNotes();
-      }
-    );
-
     // Navigation functions
-    const goToCreate = () => router.push("/notes/create");
-    const editNote = (id) => router.push(`/notes/${id}/edit`);
+    const goToCreate = () => router.push('/notes/create');
+    const editNote = id => router.push(`/notes/${id}/edit`);
 
     // Delete logic
-    const openDeleteModal = (row) => {
+    const openDeleteModal = row => {
       noteToDelete.value = row;
       deleteDialog.value = true;
     };
@@ -112,9 +130,13 @@ export default {
       loadNotes();
     };
 
+    onMounted(loadNotes);
+
     return {
       notes,
       columns,
+      search,
+      filteredNotes,
       deleteDialog,
       openDeleteModal,
       confirmDelete,
