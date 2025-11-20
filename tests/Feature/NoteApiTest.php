@@ -65,7 +65,7 @@ class NoteApiTest extends TestCase
          // Data to be posted
         $data = [
             'title' => 'a',
-            'content' => 'con'
+            'content' => 'a'
         ];
 
         // Make POST request
