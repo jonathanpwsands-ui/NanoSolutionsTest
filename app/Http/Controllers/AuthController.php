@@ -1,0 +1,80 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use Illuminate\Http\Request;
+
+class AuthController extends Controller
+{
+    // Register a new user
+    public function register(Request $request)
+    {
+        // Validate the user details
+        $fields = $request->validate([
+            'name'     => 'required|string',
+            'email'    => 'required|string|email|unique:users,email',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        // Create the user in the database
+        $user = User::create([
+            'name'     => $fields['name'],
+            'email'    => $fields['email'],
+            'password' => Hash::make($fields['password']),
+        ]);
+
+        // Create an authorisation token
+        $token = $user->createToken('authToken')->plainTextToken;
+
+        // Return response confirming user and token creation
+        return response()->json([
+            'user'  => $user,
+            'token' => $token,
+        ], 201);
+    }
+    
+    // Log in with an existing user
+    public function login(Request $request)
+    {
+        // Validate login credentials
+        $fields = $request->validate([
+            'email'    => 'required|string|email',
+            'password' => 'required|string',
+        ]);
+    
+        // Return response if login credentials do not match
+        if (!Auth::attempt($fields)) {
+            return response()->json([
+                'message' => 'Invalid login credentials'
+            ], 401);
+        }
+
+        // Authenticate user and create an authentication token
+        $user = Auth::user();
+        $token = $user->createToken('authToken')->plainTextToken;
+
+        // Return response confirming user and token authentication
+        return response()->json([
+            'user'  => $user,
+            'token' => $token,
+        ], 200);
+    }
+    
+    // Log the current user out by deleting their token
+    public function logout(Request $request)
+    {
+        // Delete the user's token
+        $request->user()->currentAccessToken()->delete();
+
+        // Return message confirming logout
+        return response()->json([
+            'message' => 'Logged out successfully'
+        ]);
+    }
+    
+    // Return an authenticated user
+    public function me(Request $request){
+        return response()->json($request->user());
+    }
+}
