@@ -22,19 +22,19 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Retrieve user
     Route::get('/me',      [AuthController::class, 'me']);
+    
+    // List notes
+    Route::get('/notes', [NoteController::class, 'list']);
+
+    // Create note
+    Route::post('/notes', [NoteController::class, 'create']);
+
+    // Retrieve note
+    Route::get('/notes/{note}', [NoteController::class, 'retrieve']);
+
+    // Update note
+    Route::put('/notes/{note}', [NoteController::class, 'update']);
+
+    // Delete note
+    Route::delete('/notes/{note}', [NoteController::class, 'delete']);
 });
-
-// List notes
-Route::get('/notes', [NoteController::class, 'list']);
-
-// Create note
-Route::post('/notes', [NoteController::class, 'create']);
-
-// Retrieve note
-Route::get('/notes/{note}', [NoteController::class, 'retrieve']);
-
-// Update note
-Route::put('/notes/{note}', [NoteController::class, 'update']);
-
-// Delete note
-Route::delete('/notes/{note}', [NoteController::class, 'delete']);
