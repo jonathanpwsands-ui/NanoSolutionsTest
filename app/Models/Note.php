@@ -9,5 +9,5 @@ class Note extends Model
 {
     use HasFactory;
     protected $table = 'notes';
-    protected $fillable = ['title','content'];
+    protected $fillable = ['title','content','user_id'];
 }
