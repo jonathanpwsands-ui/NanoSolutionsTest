@@ -117,7 +117,7 @@ export default {
 
     // Load notes into table
     const loadNotes = async () => {
-      const response = await notesApi.list();
+      const response = await notesApi.index();
       notes.value = response.data;
     };
 
