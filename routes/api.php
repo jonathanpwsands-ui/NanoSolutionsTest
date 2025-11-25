@@ -23,8 +23,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Retrieve user
     Route::get('/me',      [AuthController::class, 'me']);
     
-    // List notes
-    Route::get('/notes', [NoteController::class, 'list']);
+    // List notes (Index)
+    Route::get('/notes', [NoteController::class, 'index']);
 
     // Create note
     Route::post('/notes', [NoteController::class, 'create']);

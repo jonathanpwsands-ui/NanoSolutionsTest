@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 class NoteController extends Controller
 {
     // List notes
-    public function list(Request $request)
+    public function index(Request $request)
     {
         // Authorise listing of notes
         $this->authorize('viewAny', Note::class);
