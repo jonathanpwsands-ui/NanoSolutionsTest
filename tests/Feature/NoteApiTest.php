@@ -14,13 +14,15 @@ class NoteApiTest extends TestCase
     {
         // Create user
         $user = User::factory()->create();
-        $this->actingAs($user);
+
+        // Create token for user
+        $token = $user->createToken('test')->plainTextToken;
 
         // Create several notes for the user in the database
         Note::factory()->count(5)->for($user)->create();
 
         // Make GET request
-        $response = $this->get('/api/notes');
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])->getJson('/api/notes');
 
         // Assert HTTP OK
         $response->assertStatus(200);
@@ -39,7 +41,9 @@ class NoteApiTest extends TestCase
     {
         // Create user
         $user = User::factory()->create();
-        $this->actingAs($user);
+        
+        // Create token for user
+        $token = $user->createToken('test')->plainTextToken;
 
          // Data to be posted
         $data = [
@@ -48,7 +52,7 @@ class NoteApiTest extends TestCase
         ];
 
         // Make POST request
-        $response = $this->postJson('/api/notes', $data);
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])->postJson('/api/notes', $data);
 
         // Assert response status is 201 (created)
         $response->assertStatus(201);
@@ -74,7 +78,9 @@ class NoteApiTest extends TestCase
     {
         // Create user
         $user = User::factory()->create();
-        $this->actingAs($user);
+        
+        // Create token for user
+        $token = $user->createToken('test')->plainTextToken;
 
          // Data to be posted
         $data = [
@@ -83,7 +89,7 @@ class NoteApiTest extends TestCase
         ];
 
         // Make POST request
-        $response = $this->postJson('/api/notes', $data);
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])->postJson('/api/notes', $data);
 
         // Assert response status is 422 (validation failed)
         $response->assertStatus(422);
@@ -94,7 +100,9 @@ class NoteApiTest extends TestCase
     {
         // Create user
         $user = User::factory()->create();
-        $this->actingAs($user);
+        
+        // Create token for user
+        $token = $user->createToken('test')->plainTextToken;
 
         // Create user's note in the database
         $note = Note::factory()->for($user)->create([
@@ -103,7 +111,7 @@ class NoteApiTest extends TestCase
         ]);
 
         // Make GET request to the API route
-        $response = $this->getJson("/api/notes/{$note->id}");
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])->getJson("/api/notes/{$note->id}");
 
         // Assert HTTP OK
         $response->assertStatus(200);
@@ -121,7 +129,9 @@ class NoteApiTest extends TestCase
     {
         // Create user
         $user = User::factory()->create();
-        $this->actingAs($user);
+        
+        // Create token for user
+        $token = $user->createToken('test')->plainTextToken;
 
         // Create note in the database
         $note = Note::factory()->for($user)->create([
@@ -136,7 +146,7 @@ class NoteApiTest extends TestCase
         ];
 
         // Make PUT request to update the note
-        $response = $this->putJson("/api/notes/{$note->id}", $updateData);
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])->putJson("/api/notes/{$note->id}", $updateData);
 
         // Assert HTTP OK
         $response->assertStatus(200);
@@ -170,7 +180,9 @@ class NoteApiTest extends TestCase
     {
         // Create user
         $user = User::factory()->create();
-        $this->actingAs($user);
+        
+        // Create token for user
+        $token = $user->createToken('test')->plainTextToken;
         
         // Create note in the database
         $note = Note::factory()->for($user)->create([
@@ -179,7 +191,7 @@ class NoteApiTest extends TestCase
         ]);
 
         // Send DELETE request to the API route
-        $response = $this->deleteJson("/api/notes/{$note->id}");
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])->deleteJson("/api/notes/{$note->id}");
 
         // Assert HTTP OK
         $response->assertStatus(200);
