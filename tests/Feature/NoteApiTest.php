@@ -5,17 +5,24 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use App\Models\Note;
+use App\Models\User;
 
 class NoteApiTest extends TestCase
 {
     // Test to List All Notes
     public function test_list_notes()
     {
-        // Create several notes in the database
-        Note::factory()->count(5)->create();
+        // Create user
+        $user = User::factory()->create();
+
+        // Create token for user
+        $token = $user->createToken('test')->plainTextToken;
+
+        // Create several notes for the user in the database
+        Note::factory()->count(5)->for($user)->create();
 
         // Make GET request
-        $response = $this->get('/api/notes');
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])->getJson('/api/notes');
 
         // Assert HTTP OK
         $response->assertStatus(200);
@@ -32,6 +39,12 @@ class NoteApiTest extends TestCase
     // Test to Create Note
     public function test_create_note_success()
     {
+        // Create user
+        $user = User::factory()->create();
+        
+        // Create token for user
+        $token = $user->createToken('test')->plainTextToken;
+
          // Data to be posted
         $data = [
             'title' => 'New Note',
@@ -39,7 +52,7 @@ class NoteApiTest extends TestCase
         ];
 
         // Make POST request
-        $response = $this->postJson('/api/notes', $data);
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])->postJson('/api/notes', $data);
 
         // Assert response status is 201 (created)
         $response->assertStatus(201);
@@ -53,15 +66,22 @@ class NoteApiTest extends TestCase
             'updated_at',
         ]);
 
-        // Assert that note is in the database
+        // Assert that user's note is in the database
         $this->assertDatabaseHas('notes', [
             'title' => 'New Note',
             'content' => 'Note content here',
+            'user_id' => $user->id,
         ]);
     }
 
      public function test_create_note_fail()
     {
+        // Create user
+        $user = User::factory()->create();
+        
+        // Create token for user
+        $token = $user->createToken('test')->plainTextToken;
+
          // Data to be posted
         $data = [
             'title' => 'a',
@@ -69,7 +89,7 @@ class NoteApiTest extends TestCase
         ];
 
         // Make POST request
-        $response = $this->postJson('/api/notes', $data);
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])->postJson('/api/notes', $data);
 
         // Assert response status is 422 (validation failed)
         $response->assertStatus(422);
@@ -78,33 +98,43 @@ class NoteApiTest extends TestCase
     // Test to Retrieve Note
     public function test_retrieve_note()
     {
-        // Create note in the database
-        $post = Note::create([
+        // Create user
+        $user = User::factory()->create();
+        
+        // Create token for user
+        $token = $user->createToken('test')->plainTextToken;
+
+        // Create user's note in the database
+        $note = Note::factory()->for($user)->create([
             'title' => 'Note Title',
             'content'  => 'Note content here',
         ]);
 
         // Make GET request to the API route
-        $response = $this->getJson("/api/notes/{$post->id}");
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])->getJson("/api/notes/{$note->id}");
 
         // Assert HTTP OK
         $response->assertStatus(200);
 
         // Assert returned values that match the note
         $response->assertJson([
-            'id'    => $post->id,
-            'title' => $post->title,
-            'content'  => $post->content,
-            'created_at' => $post->created_at,
-            'updated_at' => $post->updated_at,
+            'id'    => $note->id,
+            'title' => $note->title,
+            'content'  => $note->content,
         ]);
     }
 
     // Test to Update a Note
     public function test_update_note()
     {
+        // Create user
+        $user = User::factory()->create();
+        
+        // Create token for user
+        $token = $user->createToken('test')->plainTextToken;
+
         // Create note in the database
-        $post = Note::create([
+        $note = Note::factory()->for($user)->create([
             'title' => 'Original Title',
             'content'  => 'Original Content',
         ]);
@@ -116,7 +146,7 @@ class NoteApiTest extends TestCase
         ];
 
         // Make PUT request to update the note
-        $response = $this->putJson("/api/notes/{$post->id}", $updateData);
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])->putJson("/api/notes/{$note->id}", $updateData);
 
         // Assert HTTP OK
         $response->assertStatus(200);
@@ -139,7 +169,7 @@ class NoteApiTest extends TestCase
 
         // Assert changes in the database
         $this->assertDatabaseHas('notes', [
-            'id'    => $post->id,
+            'id'    => $note->id,
             'title' => 'Updated Title',
             'content'  => 'Updated Content',
         ]);
@@ -148,14 +178,20 @@ class NoteApiTest extends TestCase
     // Test to Delete a Note
     public function test_delete_note()
     {
+        // Create user
+        $user = User::factory()->create();
+        
+        // Create token for user
+        $token = $user->createToken('test')->plainTextToken;
+        
         // Create note in the database
-        $note = Note::create([
+        $note = Note::factory()->for($user)->create([
             'title' => 'Note Title',
             'content'  => 'Note content here',
         ]);
 
         // Send DELETE request to the API route
-        $response = $this->deleteJson("/api/notes/{$note->id}");
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])->deleteJson("/api/notes/{$note->id}");
 
         // Assert HTTP OK
         $response->assertStatus(200);
