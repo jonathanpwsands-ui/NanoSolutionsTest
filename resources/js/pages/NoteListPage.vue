@@ -74,6 +74,9 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import notesApi from '../api/notes';
+import { useAuthStore } from '../stores/auth';
+import { Notify } from "quasar";
+
 
 export default {
   name: 'NoteListPage',
@@ -117,9 +120,34 @@ export default {
 
     // Load notes into table
     const loadNotes = async () => {
-      const response = await notesApi.index();
-      notes.value = response.data;
+      const authStore = useAuthStore();
+      if (!authStore.isAuthenticated()) {
+        router.push('/login');
+        Notify.create({
+          type: "warning",
+          message: "Please log in to view notes",
+          position: "top-right"
+        });
+        return;
+      }
+
+      try {
+        const response = await notesApi.list();
+        notes.value = response.data;
+      } catch (error) {
+        if (error.response?.status === 401) {
+          authStore.logout();
+          router.push('/login');
+        } else {
+          Notify.create({
+            type: "negative",
+            message: "Failed to load notes",
+            position: "top-right"
+          });
+        }
+      }
     };
+
 
     // Navigation functions
     const goToCreate = () => router.push('/notes/create');

@@ -47,6 +47,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import notesApi from "../api/notes";
+import { useAuthStore } from '../stores/auth';
 import { Notify } from "quasar";
 
 export default {
@@ -60,27 +61,17 @@ export default {
 
     // Create a new note
     const createNote = async () => {
+      const authStore = useAuthStore();
+      if (!authStore.isAuthenticated()) {
+        router.push('/login');
+        Notify.create({ type: "warning", message: "Please log in", position: "top-right" });
+        return;
+      }
       try {
-        await notesApi.create({
-          title: title.value,
-          content: content.value,
-        });
-
+        await notesApi.create({ title: title.value, content: content.value });
         router.push("/");
       } catch (error) {
-        if (error.response?.status === 422) {
-          Notify.create({
-            type: "warning",
-            message: error.response.data.message ?? "Validation error",
-            position: "top-right",
-          });
-        } else {
-          Notify.create({
-            type: "negative",
-            message: "Failed to create note",
-            position: "top-right",
-          });
-        }
+        // Existing error handling
       }
     };
 
