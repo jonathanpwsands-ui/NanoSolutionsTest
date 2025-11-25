@@ -26,7 +26,7 @@ api.interceptors.response.use(
 );
 
 export default {
-    list() {
+    index() {
         return api.get("/notes");
     },
     create(data) {
