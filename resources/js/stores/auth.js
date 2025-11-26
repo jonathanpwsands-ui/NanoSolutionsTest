@@ -3,7 +3,7 @@ import { ref } from 'vue';
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null);
-  const token = ref(localStorage.getItem('token') || null);
+  const token = ref(localStorage.getItem('authToken') || null);
 
   const setAuth = (newUser, newToken) => {
     user.value = newUser;
@@ -21,7 +21,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   if (localStorage.getItem('authToken')) {
     token.value = localStorage.getItem('authToken');
-  };
+  }
 
   return { user, token, setAuth, logout, isAuthenticated };
 }, {

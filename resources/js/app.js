@@ -1,5 +1,5 @@
 import { createApp } from 'vue';
-import { Quasar } from 'quasar';
+import { Quasar, Notify } from 'quasar';
 import { createPinia } from 'pinia';
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
 
@@ -14,7 +14,7 @@ pinia.use(piniaPluginPersistedstate);
 
 const app = createApp(App);
 app.use(pinia);
-app.use(Quasar);
+app.use(Quasar, { plugins: { Notify } }); 
 app.use(router);
 
 app.mount('#app');
