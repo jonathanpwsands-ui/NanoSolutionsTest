@@ -1,4 +1,4 @@
-# NanoSolutions Laravel + Vue (Quasar) Notes Application
+# NanoSolutions Laravel + Vue (Quasar) Notes Application with Authentication
 
 This project is a full-stack Notes CRUD application built using
 **Laravel**, **Vue 3**, **Quasar**, **Axios**, and **Vite**.\
@@ -11,39 +11,55 @@ required functionalities.
 
 ### Backend
 
--   [x] Laravel project created\
--   [x] Notes table + model\
--   [x] REST API routes\
--   [x] CRUD methods implemented\
--   [x] Validation for create/update\
+-   [x] Laravel project created
+-   [x] Notes table + model with user_id foreign key
+-   [x] REST API routes
+-   [x] CRUD methods implemented
+-   [x] Validation for create/update
 -   [x] JSON responses
+-   [x] Laravel Sanctum API authentication (register/login/logout)
+-   [x] Protected routes with auth:sanctum middleware
+-   [x] User-specific notes scoping and NotePolicy authorization
 
 ### Frontend
 
--   [x] Vue 3 configured with Vite\
--   [x] Quasar UI integrated\
--   [x] Axios API layer (`notes.js`)\
--   [x] Create Note page\
--   [x] Edit Note page\
--   [x] Delete confirmation dialog\
--   [x] Navigation with Vue Router\
--   [x] Fully functional CRUD in UI
+-   [x] Vue 3 configured with Vite
+-   [x] Quasar UI integrated
+-   [x] Axios API layer (notes.js + auth.js)
+-   [x] Create/Edit/Delete Note pages
+-   [x] Note list with q-table
+-   [x] Login/Register pages
+-   [x] Pinia auth store with persistence
+-   [x] Vue Router with auth guards
+-   [x] Axios auth interceptor (Bearer token)
+-   [x] Auto-redirect on 401 unauthorized
+-   [x] Fully functional protected CRUD UI
 
 ------------------------------------------------------------------------
 
 ## ⚙ Installation & Setup
 
+### 0️⃣ Environment Setup
+
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+Configure your `DB_*` settings in `.env`.
+
 ### 1️⃣ Install dependencies
 
-``` bash
+```bash
 composer install
 npm install
 ```
 
 ### 2️⃣ Run database migrations
 
-``` bash
+```bash
 php artisan migrate
+php artisan db:seed  # Optional: creates test users via factories/seeders
 ```
 
 ### 3️⃣ Start Laravel backend
@@ -60,26 +76,42 @@ npm run dev
 
 ------------------------------------------------------------------------
 
-## Testing
+## 🧪 Testing
 
-If you want to test the update route:
+Run the test suite:
 
-``` bash
-php artisan tinker
->>> Note::create(['title' => 'Test', 'content' => 'Example'])
+```bash
+php artisan test
 ```
+
+Tests cover authentication flows, protected notes CRUD, and authorization policies.
+
+For manual API testing, first login/register to obtain a token, then use `Authorization: Bearer {token}` header.
 
 ------------------------------------------------------------------------
 
 ## API Endpoints
 
-  Method   Endpoint          Description
-  -------- ----------------- -------------------
-  GET      /api/notes        List all notes
-  POST     /api/notes        Create a new note
-  GET      /api/notes/{id}   Retrieve a note
-  PUT      /api/notes/{id}   Update a note
-  DELETE   /api/notes/{id}   Delete a note
+All notes endpoints require authentication (`auth:sanctum` middleware).
+
+**Public (no auth):**
+
+| Method | Endpoint    | Description                  |
+|--------|-------------|------------------------------|
+| POST   | /api/register | Create new user account    |
+| POST   | /api/login   | Authenticate and get token  |
+
+**Protected (Bearer token required):**
+
+| Method | Endpoint         | Description                          |
+|--------|------------------|--------------------------------------|
+| GET    | /api/user        | Get current user profile             |
+| POST   | /api/logout      | Revoke current token                 |
+| GET    | /api/notes       | List user's notes                    |
+| POST   | /api/notes       | Create new note (auto-assigns user)  |
+| GET    | /api/notes/{id}  | Get specific note (user-owned)       |
+| PUT    | /api/notes/{id}  | Update note (user-owned)             |
+| DELETE | /api/notes/{id}  | Delete note (user-owned)             |
 
 ------------------------------------------------------------------------
 
@@ -87,11 +119,15 @@ php artisan tinker
 
 ### ✔ Backend (Laravel)
 
--   Create, read, update, delete notes
--   RESTful API routes under `/api`
--   JSON validation responses
--   Auto-routed model binding using `Note $note`
--   Fully tested CRUD functionality
+- User management: register, login, logout, profile
+- Laravel Sanctum for SPA API token authentication
+- Protected API routes (`auth:sanctum`)
+- User-scoped notes (`user_id` foreign key)
+- Authorization via `NotePolicy` (ownership checks)
+- Full CRUD with validation & JSON responses
+- Resource controllers with model binding
+- Factories & seeders for testing
+- Feature & unit tests
 
 ### ✔ Frontend (Vue 3 + Quasar)
 
@@ -110,23 +146,56 @@ php artisan tinker
 
     NanoSolutionsTest/
     ├── app/
+    │   ├── Http/Controllers/AuthController.php
+    │   ├── Http/Controllers/NoteController.php
+    │   ├── Models/Note.php
+    │   ├── Models/User.php (HasApiTokens)
+    │   └── Policies/NotePolicy.php
+    ├── config/sanctum.php
+    ├── database/migrations/
+    │   ├── ..._create_users_table.php
+    │   ├── ..._create_personal_access_tokens_table.php
+    │   └── ..._create_notes_table.php (with user_id)
     ├── public/
     ├── resources/
-    │   ├── css/
-    │   │   ├── app.css
-    │   │   └── quasar-variables.sass
+    │   ├── css/app.css
     │   ├── js/
-    │       ├── api/notes.js
-    │       ├── pages/
-    │       │   ├── NoteListPage.vue
-    │       │   ├── CreateNotePage.vue
-    │       │   └── EditNotePage.vue
-    │       ├── router.js
-    │       └── app.js
-    ├── routes/api.php
+    │   │   ├── api/auth.js
+    │   │   ├── api/notes.js
+    │   │   ├── pages/
+    │   │   │   ├── LoginPage.vue
+    │   │   │   ├── RegisterPage.vue
+    │   │   │   ├── NoteListPage.vue
+    │   │   │   ├── CreateNotePage.vue
+    │   │   │   └── EditNotePage.vue
+    │   │   ├── stores/auth.js
+    │   │   ├── router.js
+    │   │   └── app.js
+    ├── routes/api.php (auth & protected notes)
     ├── routes/web.php
+    ├── tests/Feature/AuthTest.php
     ├── vite.config.js
     └── README.md
+
+## 🔐 Authentication
+
+Uses **Laravel Sanctum** for secure SPA API authentication:
+
+- **Register/Login**: Frontend forms send credentials, receive API token
+- **Token Storage**: localStorage (frontend), auto-sent via Axios interceptor
+- **Protected Routes**: All `/api/notes*` require valid Bearer token
+- **Logout**: Revokes token server-side
+- **Security**: CSRF protection via Sanctum cookies, note ownership enforced
+
+**Quick Start**:
+1. `npm run dev && php artisan serve`
+2. Visit `http://localhost:5173/register` → create account
+3. Auto-redirect to notes after login
+
+**API Token Usage** (Postman/cURL):
+```
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...
+```
 
 ------------------------------------------------------------------------
 
