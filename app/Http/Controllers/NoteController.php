@@ -23,8 +23,8 @@ class NoteController extends Controller
         return response()->json($notes, 200);
     }
 
-    // Create note
-    public function create(Request $request)
+    // Store note
+    public function store(Request $request)
     {
         // Authorise creation of note
         $this->authorize('create', Note::class);
@@ -45,8 +45,8 @@ class NoteController extends Controller
         return response()->json($note, 201);
     }
 
-    // Retrieve note
-    public function retrieve(Request $request, Note $note)
+    // Show note
+    public function show(Request $request, Note $note)
     {
         // Authorise retrieval of note
         $this->authorize('view', $note);
@@ -74,8 +74,8 @@ class NoteController extends Controller
         return response()->json($note, 200);
     }
 
-    // Delete note
-    public function delete(Request $request, Note $note)
+    // Destroy note
+    public function destroy(Request $request, Note $note)
     {
         // Authorise deltion of note
         $this->authorize('delete', $note);

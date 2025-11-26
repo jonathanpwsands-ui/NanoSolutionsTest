@@ -26,15 +26,15 @@ Route::middleware('auth:sanctum')->group(function () {
     // List notes (Index)
     Route::get('/notes', [NoteController::class, 'index']);
 
-    // Create note
-    Route::post('/notes', [NoteController::class, 'create']);
+    // Store note
+    Route::post('/notes', [NoteController::class, 'store']);
 
-    // Retrieve note
-    Route::get('/notes/{note}', [NoteController::class, 'retrieve']);
+    // Show note
+    Route::get('/notes/{note}', [NoteController::class, 'show']);
 
     // Update note
     Route::put('/notes/{note}', [NoteController::class, 'update']);
 
-    // Delete note
-    Route::delete('/notes/{note}', [NoteController::class, 'delete']);
+    // Destroy  note
+    Route::delete('/notes/{note}', [NoteController::class, 'destroy']);
 });
