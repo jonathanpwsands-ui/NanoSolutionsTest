@@ -1,4 +1,5 @@
 import axios from "axios";
+import { useAuthStore } from '../stores/auth';
 
 const api = axios.create({
     baseURL: "http://localhost:8000/api",
@@ -10,7 +11,11 @@ const api = axios.create({
 
 // Debugging
 api.interceptors.request.use(config => {
-    console.log("AXIOS REQUEST:", config.method.toUpperCase(), config.url, config.data);
+    const token = localStorage.getItem('authToken');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    console.log("REQUEST:", config.method.toUpperCase(), config.url);
     return config;
 });
 
@@ -26,7 +31,7 @@ api.interceptors.response.use(
 );
 
 export default {
-    list() {
+    index() {
         return api.get("/notes");
     },
     create(data) {

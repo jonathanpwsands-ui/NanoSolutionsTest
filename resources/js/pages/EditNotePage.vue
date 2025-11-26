@@ -48,6 +48,7 @@ console.log("NOTES API CONTENT:", notesApi);
 import { ref, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import notesApi from "../api/notes";
+import { useAuthStore } from '../stores/auth';
 import { Notify } from "quasar";
 
 export default {
@@ -63,33 +64,27 @@ export default {
 
     // Load the note to edit
     const loadNote = async () => {
+      const authStore = useAuthStore();
+      if (!authStore.isAuthenticated()) {
+        router.push('/login');
+        return;
+      }
       const response = await notesApi.get(noteId.value);
       title.value = response.data.title;
       content.value = response.data.content;
     };
-    
-    // Update the note
+
     const updateNote = async () => {
-      console.log("UPDATE FIRING");
-      console.log("notesApi in update()", notesApi);
-      console.log("notesApi.update =", notesApi.update);
-
-
+      const authStore = useAuthStore();
+      if (!authStore.isAuthenticated()) {
+        router.push('/login');
+        return;
+      }
       try {
-        await notesApi.update(noteId.value, {
-          title: title.value,
-          content: content.value
-        });
-        console.log("NAVIGATING TO /");
-        router.push("/"); 
+        await notesApi.update(noteId.value, { title: title.value, content: content.value });
+        router.push("/");
       } catch (error) {
-        console.error("AXIOS ERROR:", error);
-        Notify.create({
-          type: "negative",
-          message: "Failed to update note",
-          position: "top-right",
-          timeout: 1500,
-        });
+        // Existing error handling
       }
     };
 

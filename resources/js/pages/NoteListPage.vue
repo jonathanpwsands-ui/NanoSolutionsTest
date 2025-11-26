@@ -1,14 +1,20 @@
 <!-- Note List Page -->
 <template>
   <div class="q-pa-md">
-    <!-- Add Note button -->
-
-    <q-btn
-      label="Add Note"
-      color="primary"
-      class="q-mb-md"
-      @click="goToCreate"
-    />
+    <div class="row q-gutter-sm q-mb-md">
+      <!-- Add Note button -->
+      <q-btn
+        label="Add Note"
+        color="primary"
+        @click="goToCreate" />
+      
+      <!-- Logout button-->
+      <q-btn 
+        v-if="isAuthenticated"
+        label="Logout"
+        color="negative"
+        @click="logout" />
+    </div>
 
     <!-- Search bar -->
     <q-input
@@ -73,7 +79,11 @@
 <script>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
 import notesApi from '../api/notes';
+import authApi from '../api/auth.js';
+import { Notify } from "quasar";
+
 
 export default {
   name: 'NoteListPage',
@@ -91,6 +101,19 @@ export default {
       sortBy: 'id',
       descending: false,
     });
+
+    const authStore = useAuthStore();
+    const isAuthenticated = computed(() => authStore.isAuthenticated());
+
+    // Logout logic
+    const logout = async () => {
+      try {
+        await authApi.logout();
+      } catch {}
+      authStore.logout();
+      Notify.create({ type: "positive", message: "Logged out successfully", position: "top-right" });
+      router.push('/login');
+    };
 
     // Define computed filter for search
     const filteredNotes = computed(() => {
@@ -117,8 +140,37 @@ export default {
 
     // Load notes into table
     const loadNotes = async () => {
-      const response = await notesApi.list();
-      notes.value = response.data;
+      console.log('loadNotes called');
+      console.log('isAuthenticated:', authStore.isAuthenticated());
+      console.log('token:', localStorage.getItem('authToken'));
+      if (!authStore.isAuthenticated()) {
+        console.log('Not authenticated, redirecting to login');
+        router.push('/login');
+        Notify.create({
+          type: "warning",
+          message: "Please log in",
+          position: "top-right"
+        });
+        return;
+      }
+      console.log('Calling notesApi.index()');
+      try {
+        const response = await notesApi.index();
+        console.log('Notes loaded:', response.data);
+        notes.value = response.data;
+      } catch (error) {
+        console.error('Load notes error:', error.response || error);
+        if (error.response?.status === 401) {
+          authStore.logout();
+          router.push('/login');
+        } else {
+          Notify.create({
+            type: "negative",
+            message: "Failed to load notes",
+            position: "top-right"
+          });
+        }
+      }
     };
 
     // Navigation functions
@@ -131,13 +183,17 @@ export default {
       deleteDialog.value = true;
     };
 
+    // Confirm Delete logic
     const confirmDelete = async () => {
       await notesApi.delete(noteToDelete.value.id);
       deleteDialog.value = false;
       loadNotes();
     };
 
-    onMounted(loadNotes);
+    console.log('NoteListPage onMounted');
+    onMounted(() => {
+      loadNotes();
+    });
 
     return {
       notes,
@@ -148,7 +204,9 @@ export default {
       openDeleteModal,
       confirmDelete,
       editNote,
-      goToCreate
+      goToCreate,
+      isAuthenticated,
+      logout,
     };
   }
 };
