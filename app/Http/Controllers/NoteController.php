@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Note;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Str;
 
 class NoteController extends Controller
 {
@@ -31,9 +32,13 @@ class NoteController extends Controller
 
         // Validate input
         $validated = $request->validate([
-            'title'  => 'required|min:3',
-            'content' => 'required|min:3'
+            'title'  => 'required|min:3|max:255',
+            'content' => 'required|min:3|max:10000'
         ]);
+
+        // Sanitize input
+        $validated['title'] = Str::limit(strip_tags($validated['title']), 255);
+        $validated['content'] = strip_tags($validated['content'], '<p><br><strong><em><ul><ol><li>');
 
         // Assign authenticated user ID to validated input
         $validated['user_id'] = $request->user()->id;
