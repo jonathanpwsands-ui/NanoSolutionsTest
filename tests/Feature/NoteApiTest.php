@@ -9,14 +9,8 @@ use App\Models\User;
 
 class NoteApiTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->artisan('migrate:fresh');
-    }
-
     // Test to List All Notes
-    public function test_list_notes()
+    public function list_notes()
     {
         // Create user
         $user = User::factory()->create();
@@ -43,7 +37,7 @@ class NoteApiTest extends TestCase
     }
 
     // Test to List All Notes within current scope
-    public function test_list_notes_scoping()
+    public function list_notes_scoping()
     {
         // Create first user
         $user = User::factory()->create();
@@ -68,7 +62,7 @@ class NoteApiTest extends TestCase
     }
 
     // Test to List All Notes without authentication
-    public function test_list_notes_unauthenticated()
+    public function list_notes_unauthenticated()
     {
         // Make GET request
         $response = $this->getJson('/api/notes');
@@ -78,7 +72,7 @@ class NoteApiTest extends TestCase
     }
 
     // Test to Create Note
-    public function test_create_note_success()
+    public function create_note_success()
     {
         // Create user
         $user = User::factory()->create();
@@ -116,7 +110,7 @@ class NoteApiTest extends TestCase
     }
 
     // Test to Create Note and fail validation
-     public function test_create_note_fail()
+     public function create_note_fail()
     {
         // Create user
         $user = User::factory()->create();
@@ -138,7 +132,7 @@ class NoteApiTest extends TestCase
     }
 
     // Test to Create Note without authentication
-    public function test_create_note_unauthenticated()
+    public function create_note_unauthenticated()
     {
         // Data to be posted
         $data = ['title' => 'Test', 'content' => 'Test content'];
@@ -150,9 +144,93 @@ class NoteApiTest extends TestCase
         $response->assertStatus(401);
     }
 
+    // Test to Create Note without a title
+    public function create_note_fails_with_empty_title()
+    {
+        // Create user
+        $user = User::factory()->create();
+
+        // Create token for user
+        $token = $user->createToken('test')->plainTextToken;
+
+        // Make POST request with no title
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->postJson('/api/notes', [
+                'title' => '',
+                'content' => 'Valid content'
+            ]);
+
+        // Assert validation errors
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors('title');
+    }
+
+    // Test to Create Note with a title that doesn't meet the minimum length
+    public function create_note_fails_with_title_too_short()
+    {
+        // Create user
+        $user = User::factory()->create();
+
+        // Create token for user
+        $token = $user->createToken('test')->plainTextToken;
+
+        // Make POST request with a title shorter than minimum length
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->postJson('/api/notes', [
+                'title' => 'ab',
+                'content' => 'Valid content'
+            ]);
+
+        // Assert validation errors
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors('title');
+    }
+
+    // Test to Create Note with content that doesn't meet the minimum length
+    public function create_note_fails_with_content_too_short()
+    {
+        // Create user
+        $user = User::factory()->create();
+        
+        // Create token for user
+        $token = $user->createToken('test')->plainTextToken;
+
+        // Make POST request with content shorter than minimum length
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->postJson('/api/notes', [
+                'title' => 'Valid Title',
+                'content' => 'ab'
+            ]);
+
+        // Assert validation errors
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors('content');
+    }
+
+    // Test to Create Note with a title that contains special characters
+    public function create_note_fails_with_special_characters_in_title()
+    {
+        // Create user
+        $user = User::factory()->create();
+
+        // Create token for user
+        $token = $user->createToken('test')->plainTextToken;
+
+        // Make POST request with title containing special characters
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->postJson('/api/notes', [
+                'title' => '<script>alert("xss")</script>',
+                'content' => 'Valid content'
+            ]);
+
+        // Should either sanitize or reject
+        $response->assertStatus(201);
+        $note = Note::latest()->first();
+        $this->assertStringNotContainsString('<script>', $note->title);
+    }
 
     // Test to Retrieve Note
-    public function test_retrieve_note()
+    public function retrieve_note()
     {
         // Create user
         $user = User::factory()->create();
@@ -181,7 +259,7 @@ class NoteApiTest extends TestCase
     }
 
     // // Test to Retrieve Note without authorisation
-    public function test_retrieve_note_unauthorized()
+    public function retrieve_note_unauthorized()
     {
         // Create first user
         $userA = User::factory()->create();
@@ -203,7 +281,7 @@ class NoteApiTest extends TestCase
     }
 
     // Test to Update a Note
-    public function test_update_note()
+    public function update_note()
     {
         // Create user
         $user = User::factory()->create();
@@ -254,7 +332,7 @@ class NoteApiTest extends TestCase
     }
 
     // Test to Update a Note and fail
-    public function test_update_note_fail()
+    public function update_note_fail()
     {
         // Create user
         $user = User::factory()->create();
@@ -276,7 +354,7 @@ class NoteApiTest extends TestCase
     }
 
     // Test to Update a Note without authentication
-    public function test_update_note_unauthenticated()
+    public function update_note_unauthenticated()
     {
         // Data to update with
         $updateData = ['title' => 'Updated Title', 'content' => 'Updated content'];
@@ -289,7 +367,7 @@ class NoteApiTest extends TestCase
     }
 
     // Test to Update a Note without authorisation
-    public function test_update_note_unauthorized()
+    public function update_note_unauthorized()
     {
         // Create the first user
         $userA = User::factory()->create();
@@ -313,8 +391,32 @@ class NoteApiTest extends TestCase
         $response->assertStatus(403);
     }
 
+    // Test to Update a Note with invalid data
+    public function update_note_fails_with_invalid_data()
+    {
+        // Create user
+        $user = User::factory()->create();
+
+        // Create token for user
+        $token = $user->createToken('test')->plainTextToken;
+
+        // Create note for user
+        $note = Note::factory()->for($user)->create();
+
+        // Make PUT request with invalid data
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->putJson("/api/notes/{$note->id}", [
+                'title' => 'ab',
+                'content' => 'ab'
+            ]);
+
+        // Assert validation errors
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['title', 'content']);
+    }
+
     // Test to Delete a Note
-    public function test_delete_note()
+    public function delete_note()
     {
         // Create user
         $user = User::factory()->create();
@@ -344,7 +446,7 @@ class NoteApiTest extends TestCase
     }
 
     // Test to Delete a Note without authentication
-    public function test_delete_note_unauthenticated()
+    public function delete_note_unauthenticated()
     {
         // Send DELETE request to the API route
         $response = $this->deleteJson('/api/notes/999');
@@ -354,7 +456,7 @@ class NoteApiTest extends TestCase
     }
 
     // Test to Delete a Note without authorisation
-    public function test_delete_note_unauthorized()
+    public function delete_note_unauthorized()
     {
         // Create the first user
         $userA = User::factory()->create();
@@ -373,5 +475,85 @@ class NoteApiTest extends TestCase
 
         // Assert unauthorised
         $response->assertStatus(403);
+    }
+
+    // Test to return all of a user's notes in the note list
+    public function notes_list_returns_all_user_notes()
+    {
+        // Create user
+        $user = User::factory()->create();
+
+        // Create token for user
+        $token = $user->createToken('test')->plainTextToken;
+
+        // Create 25 notes
+        Note::factory()->count(25)->for($user)->create();
+
+        // Make GET request
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->getJson('/api/notes');
+
+        // Assert that user has 25 notes
+        $response->assertStatus(200)
+            ->assertJsonCount(25);
+    }
+
+    // Test to check if the note list can display no notes
+    public function notes_list_handles_empty_results()
+    {
+        // Create user
+        $user = User::factory()->create();
+
+        // Create token for user
+        $token = $user->createToken('test')->plainTextToken;
+
+        // Make GET request
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->getJson('/api/notes');
+
+        // Assert that user has no notes
+        $response->assertStatus(200)
+            ->assertJsonCount(0);
+    }
+
+    // Test to check if note response give the correct structure
+    public function note_response_has_correct_structure()
+    {
+        $user = User::factory()->create();
+        $token = $user->createToken('test')->plainTextToken;
+        $note = Note::factory()->for($user)->create();
+
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->getJson("/api/notes/{$note->id}");
+
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'id',
+                'title',
+                'content',
+                'user_id',
+                'created_at',
+                'updated_at'
+            ])
+            ->assertJsonFragment([
+                'id' => $note->id,
+                'title' => $note->title
+            ]);
+    }
+
+    // Test to check if error response has the correct structure
+    public function error_response_has_correct_structure()
+    {
+        $response = $this->postJson('/api/register', []);
+
+        $response->assertStatus(422)
+            ->assertJsonStructure([
+                'message',
+                'errors' => [
+                    'name',
+                    'email',
+                    'password'
+                ]
+            ]);
     }
 }

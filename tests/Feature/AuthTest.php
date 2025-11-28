@@ -9,14 +9,10 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class AuthTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->artisan('migrate:fresh');
-    }
+    use RefreshDatabase;
 
     // Test to register a new User successfully
-    public function test_register_success()
+    public function register_success()
     {
         // Data to define a new user
         $data = [
@@ -51,7 +47,7 @@ class AuthTest extends TestCase
     }
 
     // Test to register a new User with an already registered email
-    public function test_register_duplicate_email()
+    public function register_duplicate_email()
     {
         // Create a new User with the following email address
         User::factory()->create([
@@ -74,7 +70,7 @@ class AuthTest extends TestCase
     }
 
     // Test to register a new User and fail
-    public function test_register_fail()
+    public function register_fail()
     {
         // Make POST request with no data
         $response = $this->postJson('/api/register', []);
@@ -87,7 +83,7 @@ class AuthTest extends TestCase
     }
 
     // Test to register a new User and fail password confirmation
-    public function test_register_password_confirmation_fail()
+    public function register_password_confirmation_fail()
     {
         // Data to define a new user
         $data = [
@@ -107,8 +103,55 @@ class AuthTest extends TestCase
         $response->assertJsonValidationErrors('password');
     }
 
+    // Test to fail registration with an invalid email format
+    public function register_fails_with_invalid_email_format()
+    {
+        // Data to define a new user
+        $response = $this->postJson('/api/register', [
+            'name' => 'Test User',
+            'email' => 'invalid-email',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+        // Assert validation errors
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors('email');
+    }
+
+    // Test to fail registration with a password shorter than the minimum length
+    public function register_fails_with_short_password()
+    {
+        // Data to define a user with
+        $response = $this->postJson('/api/register', [
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => '12345',
+            'password_confirmation' => '12345',
+        ]);
+
+        // Assert validation errors
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors('password');
+    }
+
+    // Test to fail registration without a name
+    public function register_fails_with_missing_name()
+    {
+        // Data to define a user with
+        $response = $this->postJson('/api/register', [
+            'email' => 'test@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+        // Assert validation errors
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors('name');
+    }
+
     // Test to login successfully
-    public function test_login_success()
+    public function login_success()
     {
         // Create a new User with password
         $user = User::factory()->create([
@@ -132,7 +175,7 @@ class AuthTest extends TestCase
     }
 
     // Test to login using the wrong credentials
-    public function test_login_wrong_credentials()
+    public function login_wrong_credentials()
     {
         // Create a new User
         $user = User::factory()->create();
@@ -151,7 +194,7 @@ class AuthTest extends TestCase
     }
 
     // Test to login and fail validation
-    public function test_login_fail()
+    public function login_fail()
     {
         // Make POST request with no data
         $response = $this->postJson('/api/login', []);
@@ -163,8 +206,36 @@ class AuthTest extends TestCase
         $response->assertJsonValidationErrors(['email', 'password']);
     }
 
+    // Test to fail login with no credentials
+    public function login_fails_with_empty_credentials()
+    {
+        // Make POST request with empty attributes
+        $response = $this->postJson('/api/login', [
+            'email' => '',
+            'password' => '',
+        ]);
+
+        // Assert validation errors
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['email', 'password']);
+    }
+
+    // Test to fail login with a user that doesn't exist in the database
+    public function login_fails_with_non_existent_user()
+    {
+        // Make POST request with nonexistent credentials
+        $response = $this->postJson('/api/login', [
+            'email' => 'nonexistent@example.com',
+            'password' => 'password123',
+        ]);
+
+        // Assert unauthorised
+        $response->assertStatus(401)
+            ->assertJson(['message' => 'Invalid login credentials']);
+    }
+
     // Test to authorise the User successfully
-    public function test_get_me_authenticated()
+    public function get_me_authenticated()
     {
         // Create a new User
         $user = User::factory()->create();
@@ -189,7 +260,7 @@ class AuthTest extends TestCase
     }
 
     // Test to authorise the User while unauthenticated
-    public function test_get_me_unauthenticated()
+    public function get_me_unauthenticated()
     {
         // Make GET request
         $response = $this->getJson('/api/me');
@@ -199,7 +270,7 @@ class AuthTest extends TestCase
     }
 
     // Test to logout the User successfully
-    public function test_logout_success()
+    public function logout_success()
     {
         // Create a new User
         $user = User::factory()->create();
@@ -220,7 +291,7 @@ class AuthTest extends TestCase
     }
 
     // Test to logout the User while unauthenticated
-    public function test_logout_unauthenticated()
+    public function logout_unauthenticated()
     {
         // Make POST request
         $response = $this->postJson('/api/logout');
