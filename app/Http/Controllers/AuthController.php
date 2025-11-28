@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Validation\Rules\Password;
 
@@ -50,6 +51,17 @@ class AuthController extends Controller
     // Log in with an existing user
     public function login(Request $request)
     {
+        // Create login key
+        $key = 'login.' . $request->ip();
+    
+        // Prevent login if more than 5 attempts are made
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            $seconds = RateLimiter::availableIn($key);
+            return response()->json([
+                'message' => "Too many login attempts. Please try again in {$seconds} seconds."
+            ], 429);
+        }
+
         // Validate login credentials
         $fields = $request->validate([
             'email'    => 'required|string|email',
@@ -58,10 +70,14 @@ class AuthController extends Controller
     
         // Return response if login credentials do not match
         if (!Auth::attempt($fields)) {
+            RateLimiter::hit($key, 300); // Lock for 5 minutes
             return response()->json([
                 'message' => 'Invalid login credentials'
             ], 401);
         }
+
+        // Clear login key
+        RateLimiter::clear($key);
 
         // Authenticate user and create an authentication token
         $user = Auth::user();
