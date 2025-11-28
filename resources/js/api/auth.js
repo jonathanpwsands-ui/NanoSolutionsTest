@@ -9,7 +9,8 @@ const api = axios.create({
 });
 
 api.interceptors.request.use(config => {
-  const token = localStorage.getItem('authToken');
+  // Switch to cookie-based authentication with Sanctum
+  axios.defaults.withCredentials = true;
   if (token) config.headers.Authorization = `Bearer ${token}`;
   console.log("REQUEST:", config.method.toUpperCase(), config.url);
   return config;
