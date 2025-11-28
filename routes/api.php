@@ -10,10 +10,12 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 // Create user
-Route::post('/register', [AuthController::class, 'register']);
+Route::post('/register', [AuthController::class, 'register'])
+    ->middleware('throttle:5,1'); // Limit to 5 attempts per minute
 
 // Log in
-Route::post('/login',    [AuthController::class, 'login']);
+Route::post('/login',    [AuthController::class, 'login'])
+    ->middleware('throttle:5,1'); // Limit to 5 attempts per minute
 
 // Requires user authentication to be used
 Route::middleware('auth:sanctum')->group(function () {
