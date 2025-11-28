@@ -9,11 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class AuthTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->artisan('migrate:fresh');
-    }
+    use RefreshDatabase;
 
     // Test to register a new User successfully
     public function register_success()

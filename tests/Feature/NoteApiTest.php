@@ -9,11 +9,7 @@ use App\Models\User;
 
 class NoteApiTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->artisan('migrate:fresh');
-    }
+    use RefreshDatabase;
 
     // Test to List All Notes
     public function list_notes()
