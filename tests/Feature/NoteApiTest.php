@@ -517,4 +517,45 @@ class NoteApiTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonCount(0);
     }
+
+    // Test to check if note response give the correct structure
+    public function note_response_has_correct_structure()
+    {
+        $user = User::factory()->create();
+        $token = $user->createToken('test')->plainTextToken;
+        $note = Note::factory()->for($user)->create();
+
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->getJson("/api/notes/{$note->id}");
+
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'id',
+                'title',
+                'content',
+                'user_id',
+                'created_at',
+                'updated_at'
+            ])
+            ->assertJsonFragment([
+                'id' => $note->id,
+                'title' => $note->title
+            ]);
+    }
+
+    // Test to check if error response has the correct structure
+    public function error_response_has_correct_structure()
+    {
+        $response = $this->postJson('/api/register', []);
+
+        $response->assertStatus(422)
+            ->assertJsonStructure([
+                'message',
+                'errors' => [
+                    'name',
+                    'email',
+                    'password'
+                ]
+            ]);
+    }
 }
