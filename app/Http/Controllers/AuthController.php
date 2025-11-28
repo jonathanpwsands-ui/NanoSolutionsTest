@@ -6,7 +6,9 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
 {
@@ -17,7 +19,16 @@ class AuthController extends Controller
         $fields = $request->validate([
             'name'     => 'required|string',
             'email'    => 'required|string|email|unique:users,email',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => [
+                'required',
+                'confirmed',
+                Password::min(8) // Minimum of 8 characters
+                    ->letters() // Must include a letter
+                    ->mixedCase() // Must include both lower case and upper case
+                    ->numbers() // Must include a number
+                    ->symbols() // Must include a symbol
+                    ->uncompromised() // Checks against known breached passwords from haveibeenpwned.com database
+            ],
         ]);
 
         // Create the user in the database
@@ -27,8 +38,8 @@ class AuthController extends Controller
             'password' => Hash::make($fields['password']),
         ]);
 
-        // Create an authorisation token
-        $token = $user->createToken('authToken')->plainTextToken;
+        // Create an authorisation token that expires after 60 minutes
+        $token = $user->createToken('authToken', ['*'], now()->addMinutes(60))->plainTextToken;
 
         // Return response confirming user and token creation
         return response()->json([
@@ -40,6 +51,17 @@ class AuthController extends Controller
     // Log in with an existing user
     public function login(Request $request)
     {
+        // Create login key
+        $key = 'login.' . $request->ip();
+    
+        // Prevent login if more than 5 attempts are made
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            $seconds = RateLimiter::availableIn($key);
+            return response()->json([
+                'message' => "Too many login attempts. Please try again in {$seconds} seconds."
+            ], 429);
+        }
+
         // Validate login credentials
         $fields = $request->validate([
             'email'    => 'required|string|email',
@@ -48,20 +70,28 @@ class AuthController extends Controller
     
         // Return response if login credentials do not match
         if (!Auth::attempt($fields)) {
+            RateLimiter::hit($key, 300); // Lock for 5 minutes
             return response()->json([
                 'message' => 'Invalid login credentials'
             ], 401);
         }
 
+        // Clear login key
+        RateLimiter::clear($key);
+
         // Authenticate user and create an authentication token
         $user = Auth::user();
-        $token = $user->createToken('authToken')->plainTextToken;
+        $token = $user->createToken('authToken', ['*'], now()->addMinutes(60))->plainTextToken;
 
         // Return response confirming user and token authentication
         return response()->json([
-            'user'  => $user,
+            'user'  => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ],
             'token' => $token,
-        ], 200);
+        ], 201);
     }
     
     // Log the current user out by deleting their token
