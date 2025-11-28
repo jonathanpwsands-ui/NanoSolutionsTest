@@ -53,11 +53,25 @@ class NoteController extends Controller
     // Show note
     public function show(Request $request, Note $note)
     {
-        // Authorise retrieval of note
-        $this->authorize('view', $note);
+        try {
+            // Authorise retrieval of note
+            $this->authorize('view', $note);
 
-        // return user's note
-        return response()->json($note, 200);
+            // Return user's note
+            return response()->json($note, 200);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            // Return 403 forbidden
+            return response()->json([
+                'message' => 'Unauthorized access'
+            ], 403);
+        } catch (\Exception $e) {
+            // Log error message
+            \Log::error('Error retrieving note: ' . $e->getMessage());
+            // Return 500 internal server error
+            return response()->json([
+                'message' => 'An error occurred'
+            ], 500);
+        }
     }
 
     // Update note
