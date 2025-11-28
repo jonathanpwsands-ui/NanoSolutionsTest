@@ -37,8 +37,8 @@ class AuthController extends Controller
             'password' => Hash::make($fields['password']),
         ]);
 
-        // Create an authorisation token
-        $token = $user->createToken('authToken')->plainTextToken;
+        // Create an authorisation token that expires after 60 minutes
+        $token = $user->createToken('authToken', ['*'], now()->addMinutes(60))->plainTextToken;
 
         // Return response confirming user and token creation
         return response()->json([
@@ -65,7 +65,7 @@ class AuthController extends Controller
 
         // Authenticate user and create an authentication token
         $user = Auth::user();
-        $token = $user->createToken('authToken')->plainTextToken;
+        $token = $user->createToken('authToken', ['*'], now()->addMinutes(60))->plainTextToken;
 
         // Return response confirming user and token authentication
         return response()->json([
