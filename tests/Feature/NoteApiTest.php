@@ -478,4 +478,43 @@ class NoteApiTest extends TestCase
         // Assert unauthorised
         $response->assertStatus(403);
     }
+
+    // Test to return all of a user's notes in the note list
+    public function notes_list_returns_all_user_notes()
+    {
+        // Create user
+        $user = User::factory()->create();
+
+        // Create token for user
+        $token = $user->createToken('test')->plainTextToken;
+
+        // Create 25 notes
+        Note::factory()->count(25)->for($user)->create();
+
+        // Make GET request
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->getJson('/api/notes');
+
+        // Assert that user has 25 notes
+        $response->assertStatus(200)
+            ->assertJsonCount(25);
+    }
+
+    // Test to check if the note list can display no notes
+    public function notes_list_handles_empty_results()
+    {
+        // Create user
+        $user = User::factory()->create();
+
+        // Create token for user
+        $token = $user->createToken('test')->plainTextToken;
+
+        // Make GET request
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->getJson('/api/notes');
+
+        // Assert that user has no notes
+        $response->assertStatus(200)
+            ->assertJsonCount(0);
+    }
 }
