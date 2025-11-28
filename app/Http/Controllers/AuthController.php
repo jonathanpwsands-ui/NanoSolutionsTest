@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
 {
@@ -17,7 +18,16 @@ class AuthController extends Controller
         $fields = $request->validate([
             'name'     => 'required|string',
             'email'    => 'required|string|email|unique:users,email',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => [
+                'required',
+                'confirmed',
+                Password::min(8) // Minimum of 8 characters
+                    ->letters() // Must include a letter
+                    ->mixedCase() // Must include both lower case and upper case
+                    ->numbers() // Must include a number
+                    ->symbols() // Must include a symbol
+                    ->uncompromised() // Checks against known breached passwords from haveibeenpwned.com database
+            ],
         ]);
 
         // Create the user in the database
