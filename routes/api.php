@@ -18,7 +18,7 @@ Route::post('/login',    [AuthController::class, 'login'])
     ->middleware('throttle:5,1'); // Limit to 5 attempts per minute
 
 // Requires user authentication to be used
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     // Log out
     Route::post('/logout', [AuthController::class, 'logout']);
 
