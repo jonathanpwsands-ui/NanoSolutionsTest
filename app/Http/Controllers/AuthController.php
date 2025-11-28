@@ -69,9 +69,13 @@ class AuthController extends Controller
 
         // Return response confirming user and token authentication
         return response()->json([
-            'user'  => $user,
+            'user'  => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ],
             'token' => $token,
-        ], 200);
+        ], 201);
     }
     
     // Log the current user out by deleting their token
