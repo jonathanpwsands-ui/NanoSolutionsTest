@@ -35,11 +35,13 @@ class NoteApiTest extends TestCase
 
         // Assert returned values of each note
         $response->assertJsonStructure([
-            '*' => ['id', 'title', 'content', 'created_at', 'updated_at',]
+            'data' => [
+                '*' => ['id', 'title', 'content', 'created_at', 'updated_at']
+            ]
         ]);
 
         // Assert the number of notes in the response
-        $response->assertJsonCount(5);
+        $response->assertJsonCount(5, 'data');
     }
 
     // Test to List All Notes within current scope
@@ -64,7 +66,7 @@ class NoteApiTest extends TestCase
         $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])->getJson('/api/notes');
 
         // Assert HTTP OK for the number of notes that the first user has
-        $response->assertStatus(200)->assertJsonCount(3); 
+        $response->assertStatus(200)->assertJsonCount(3, 'data'); 
     }
 
     // Test to List All Notes without authentication
@@ -100,11 +102,13 @@ class NoteApiTest extends TestCase
 
         // Assert structure of the note
         $response->assertJsonStructure([
-            'id',
-            'title',
-            'content',
-            'created_at',
-            'updated_at',
+            'data' => [
+                'id',
+                'title',
+                'content',
+                'created_at',
+                'updated_at',
+                ]
         ]);
 
         // Assert that user's note is in the database
@@ -174,9 +178,11 @@ class NoteApiTest extends TestCase
 
         // Assert returned values that match the note
         $response->assertJson([
-            'id'    => $note->id,
-            'title' => $note->title,
-            'content'  => $note->content,
+            'data' => [
+                'id'    => $note->id,
+                'title' => $note->title,
+                'content'  => $note->content,
+            ]
         ]);
     }
 
@@ -231,17 +237,21 @@ class NoteApiTest extends TestCase
 
         // Assert structure for updated values
         $response->assertJsonStructure([
-            'id',
-            'title',
-            'content',
-            'created_at',
-            'updated_at',
+            'data' => [
+                'id',
+                'title',
+                'content',
+                'created_at',
+                'updated_at',
+            ]
         ]);
 
         // Assert returned updated values
         $response->assertJson([
-            'title' => $updateData['title'],
-            'content' => $updateData['content'],
+            'data' => [
+                'title' => $updateData['title'],
+                'content' => $updateData['content'],
+            ]
         ]);
 
 

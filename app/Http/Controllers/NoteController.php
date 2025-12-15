@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Note;
 use Illuminate\Http\Request;
+use App\Http\Resources\NoteResource;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class NoteController extends Controller
@@ -16,11 +17,11 @@ class NoteController extends Controller
         // Authorise listing of notes
         $this->authorize('viewAny', Note::class);
 
-        // Authenticate user request
+        // Authenticate user request + paginate
         $notes = Note::where('user_id', $request->user()->id)->get();
 
-        // Return user's notes
-        return response()->json($notes, 200);
+        // Return user's notes as collection
+        return NoteResource::collection($notes);
     }
 
     // Store note
@@ -41,8 +42,8 @@ class NoteController extends Controller
         // Create instance of note
         $note = Note::create($validated);
 
-        // Return response confirming note creation
-        return response()->json($note, 201);
+        // Return new note as resource
+        return (new NoteResource($note))->response()->setStatusCode(201);
     }
 
     // Show note
@@ -51,8 +52,8 @@ class NoteController extends Controller
         // Authorise retrieval of note
         $this->authorize('view', $note);
 
-        // return user's note
-        return response()->json($note, 200);
+        // return user's note as resource
+        return new NoteResource($note);
     }
 
     // Update note
@@ -70,8 +71,8 @@ class NoteController extends Controller
         // Update instance of note
         $note->update($validated);
 
-        // Return updated instance of note
-        return response()->json($note, 200);
+        // Return updated note as resource
+        return new NoteResource($note);
     }
 
     // Destroy note
