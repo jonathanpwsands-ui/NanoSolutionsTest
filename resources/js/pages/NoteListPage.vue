@@ -77,137 +77,131 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '../stores/auth';
-import notesApi from '../api/notes';
-import authApi from '../api/auth.js';
-import { Notify } from "quasar";
-
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
+import notesApi from '../api/notes'
+import authApi from '../api/auth'
+import { Notify } from 'quasar'
 
 export default {
   name: 'NoteListPage',
 
-  setup() {
-    const router = useRouter();
+  data () {
+    return {
+      notes: [],
+      deleteDialog: false,
+      noteToDelete: null,
+      search: '',
+      sort: {
+        sortBy: 'id',
+        descending: false
+      },
+      // Define columns
+      columns: [
+        { name: 'id', label: 'ID', field: 'id', sortable: true },
+        { name: 'title', label: 'Title', field: 'title', sortable: true },
+        { name: 'content', label: 'Content', field: 'content', sortable: true },
+        { name: 'created_at', label: 'Created At', field: 'created_at', sortable: true },
+        { name: 'updated_at', label: 'Updated At', field: 'updated_at', sortable: true },
+        { name: 'actions', label: 'Actions', field: 'actions' }
+      ]
+    }
+  },
 
-    const notes = ref([]);
-    const deleteDialog = ref(false);
-    const noteToDelete = ref(null);
+  computed: {
+    authStore () {
+      return useAuthStore()
+    },
 
-    const search = ref("");
+    isAuthenticated () {
+      return this.authStore.isAuthenticated()
+    },
 
-    const sort = ref({
-      sortBy: 'id',
-      descending: false,
-    });
+    filteredNotes () {
+      if (!this.search) return this.notes
 
-    const authStore = useAuthStore();
-    const isAuthenticated = computed(() => authStore.isAuthenticated());
+      const term = this.search.toLowerCase()
 
-    // Logout logic
-    const logout = async () => {
-      try {
-        await authApi.logout();
-      } catch {}
-      authStore.logout();
-      Notify.create({ type: "positive", message: "Logged out successfully", position: "top-right" });
-      router.push('/login');
-    };
-
-    // Define computed filter for search
-    const filteredNotes = computed(() => {
-      if (!search.value) return notes.value;
-
-      const term = search.value.toLowerCase();
-
-      return notes.value.filter(note =>
+      return this.notes.filter(note =>
         note.title.toLowerCase().includes(term) ||
         note.content.toLowerCase().includes(term) ||
         String(note.id).includes(term)
-      );
-    });
+      )
+    }
+  },
 
-     // Define columns
-    const columns = [
-      { name: 'id', label: 'ID', field: 'id', sortable: true },
-      { name: 'title', label: 'Title', field: 'title', sortable: true },
-      { name: 'content', label: 'Content', field: 'content', sortable: true },
-      { name: 'created_at', label: 'Created At', field: 'created_at', sortable: true },
-      { name: 'updated_at', label: 'Updated At', field: 'updated_at', sortable: true },
-      { name: 'actions', label: 'Actions', field: 'actions' }
-    ];
-
+  methods: {
     // Load notes into table
-    const loadNotes = async () => {
-      console.log('loadNotes called');
-      console.log('isAuthenticated:', authStore.isAuthenticated());
-      console.log('token:', localStorage.getItem('authToken'));
-      if (!authStore.isAuthenticated()) {
-        console.log('Not authenticated, redirecting to login');
-        router.push('/login');
+    async loadNotes () {
+      if (!this.isAuthenticated) {
+        this.$router.push('/login')
         Notify.create({
-          type: "warning",
-          message: "Please log in",
-          position: "top-right"
-        });
-        return;
+          type: 'warning',
+          message: 'Please log in',
+          position: 'top-right'
+        })
+        return
       }
-      console.log('Calling notesApi.index()');
+
       try {
-        const response = await notesApi.index();
-        console.log('Notes loaded:', response.data);
-        notes.value = response.data;
+        const response = await notesApi.index()
+        this.notes = response.data.data
       } catch (error) {
-        console.error('Load notes error:', error.response || error);
         if (error.response?.status === 401) {
-          authStore.logout();
-          router.push('/login');
+          this.authStore.logout()
+          this.$router.push('/login')
         } else {
           Notify.create({
-            type: "negative",
-            message: "Failed to load notes",
-            position: "top-right"
-          });
+            type: 'negative',
+            message: 'Failed to load notes',
+            position: 'top-right'
+          })
         }
       }
-    };
+    },
 
-    // Navigation functions
-    const goToCreate = () => router.push('/notes/create');
-    const editNote = id => router.push(`/notes/${id}/edit`);
+    // Navigation method for Note Creation page
+    goToCreate () {
+      this.$router.push({ name: 'CreateNote' })
+    },
+
+    // Navigation method for Note Editing page
+    editNote (id) {
+      this.$router.push(`/notes/${id}/edit`)
+    },
 
     // Delete logic
-    const openDeleteModal = row => {
-      noteToDelete.value = row;
-      deleteDialog.value = true;
-    };
+    openDeleteModal (row) {
+      this.noteToDelete = row
+      this.deleteDialog = true
+    },
 
     // Confirm Delete logic
-    const confirmDelete = async () => {
-      await notesApi.delete(noteToDelete.value.id);
-      deleteDialog.value = false;
-      loadNotes();
-    };
+    async confirmDelete () {
+      await notesApi.delete(this.noteToDelete.id)
+      this.deleteDialog = false
+      this.loadNotes()
+    },
 
-    console.log('NoteListPage onMounted');
-    onMounted(() => {
-      loadNotes();
-    });
+    // Logout logic
+    async logout () {
+      try {
+        await authApi.logout()
+      } catch {}
 
-    return {
-      notes,
-      columns,
-      search,
-      filteredNotes,
-      deleteDialog,
-      openDeleteModal,
-      confirmDelete,
-      editNote,
-      goToCreate,
-      isAuthenticated,
-      logout,
-    };
+      this.authStore.logout()
+      Notify.create({
+        type: 'positive',
+        message: 'Logged out successfully',
+        position: 'top-right'
+      })
+      this.$router.push('/login')
+    }
+  },
+
+  mounted () {
+    this.loadNotes()
   }
-};
+}
 </script>
+
