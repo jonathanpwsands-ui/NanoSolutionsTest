@@ -3,8 +3,8 @@
   <div class="q-pa-md" style="max-width: 600px; margin: auto;">
     <h4 class="q-mb-lg">Edit Note</h4>
 
-    <!-- Title field -->
     <q-form @submit.prevent="updateNote">
+      <!-- Title field -->
       <q-input
         v-model="title"
         label="Title"
@@ -44,63 +44,79 @@
 </template>
 
 <script>
-console.log("NOTES API CONTENT:", notesApi);
-import { ref, onMounted } from "vue";
-import { useRouter, useRoute } from "vue-router";
 import notesApi from "../api/notes";
-import { useAuthStore } from '../stores/auth';
+import { useAuthStore } from "../stores/auth";
 import { Notify } from "quasar";
 
 export default {
   name: "NoteEditPage",
 
-  setup() {
-    const router = useRouter();
-    const route = useRoute();
+  data() {
+    return {
+      title: "",
+      content: "",
+      noteId: this.$route.params.id
+    };
+  },
 
-    const title = ref("");
-    const content = ref("");
-    const noteId = ref(route.params.id);
-
+  methods: {
     // Load the note to edit
-    const loadNote = async () => {
+    async loadNote() {
       const authStore = useAuthStore();
-      if (!authStore.isAuthenticated()) {
-        router.push('/login');
-        return;
-      }
-      const response = await notesApi.get(noteId.value);
-      title.value = response.data.title;
-      content.value = response.data.content;
-    };
 
-    const updateNote = async () => {
-      const authStore = useAuthStore();
       if (!authStore.isAuthenticated()) {
-        router.push('/login');
+        this.$router.push("/login");
         return;
       }
+
       try {
-        await notesApi.update(noteId.value, { title: title.value, content: content.value });
-        router.push("/");
+        const response = await notesApi.get(this.noteId);
+        this.title = response.data.title;
+        this.content = response.data.content;
       } catch (error) {
-        // Existing error handling
+        Notify.create({
+          type: "negative",
+          message: "Failed to load note"
+        });
       }
-    };
+    },
+
+    async updateNote() {
+      const authStore = useAuthStore();
+
+      if (!authStore.isAuthenticated()) {
+        this.$router.push("/login");
+        return;
+      }
+
+      try {
+        await notesApi.update(this.noteId, {
+          title: this.title,
+          content: this.content
+        });
+
+        Notify.create({
+          type: "positive",
+          message: "Note updated successfully"
+        });
+
+        this.$router.push("/");
+      } catch (error) {
+        Notify.create({
+          type: "negative",
+          message: "Failed to update note"
+        });
+      }
+    },
 
     // Return to Note List
-    const goBack = () => {
-      router.push({ path: '/', force: true });
-    };
+    goBack() {
+      this.$router.push({ path: "/", force: true });
+    }
+  },
 
-    onMounted(loadNote);
-
-    return {
-      title,
-      content,
-      updateNote,
-      goBack
-    };
+  mounted() {
+    this.loadNote();
   }
 };
 </script>
