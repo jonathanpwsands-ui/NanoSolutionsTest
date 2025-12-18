@@ -27,30 +27,50 @@
 </template>
 
 <script>
-import { ref } from "vue";
-import { useRouter } from "vue-router";
 import authApi from "../api/auth";
 import { useAuthStore } from "../stores/auth";
 import { Notify } from "quasar";
 
 export default {
-  setup() {
-    const router = useRouter();
-    const authStore = useAuthStore();
-    const name = ref(""); const email = ref(""); const password = ref(""); const password_confirmation = ref("");
+  name: "RegisterPage",
 
-    // Register a user
-    const register = async () => {
-      try {
-        const { data } = await authApi.register({ name: name.value, email: email.value, password: password.value, password_confirmation: password_confirmation.value });
-        authStore.setAuth(data.user, data.token);
-        router.push("/");
-      } catch (error) {
-        Notify.create({ type: "negative", message: error.response?.data?.message || "Registration failed", position: "top-right" });
-      }
+  data() {
+    return {
+      name: "",
+      email: "",
+      password: "",
+      password_confirmation: "",
+      authStore: null
     };
+  },
 
-    return { name, email, password, password_confirmation, register };
+  created() {
+    // Initialize Pinia store
+    this.authStore = useAuthStore();
+  },
+
+  methods: {
+    // Register a user
+    async register() {
+      try {
+        const { data } = await authApi.register({
+          name: this.name,
+          email: this.email,
+          password: this.password,
+          password_confirmation: this.password_confirmation
+        });
+
+        this.authStore.setAuth(data.user, data.token);
+        this.$router.push("/");
+      } catch (error) {
+        Notify.create({
+          type: "negative",
+          message:
+            error.response?.data?.message || "Registration failed",
+          position: "top-right"
+        });
+      }
+    }
   }
 };
 </script>
