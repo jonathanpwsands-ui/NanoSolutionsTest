@@ -162,7 +162,7 @@ export default {
 
     // Navigation method for Note Creation page
     goToCreate () {
-      this.$router.push({ name: 'CreateNote' })
+      this.$router.push('/notes/create')
     },
 
     // Navigation method for Note Editing page
