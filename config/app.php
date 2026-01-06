@@ -123,4 +123,17 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'e2e' => [
+        /**
+        * The prefix for the testing endpoints that are used to interact with Playwright
+        * Make sure to change `use.laravelBaseUrl` in playwright.config.ts if you change this
+        */
+        'prefix' => 'playwright',
+        
+        /**
+        * The environments in which the testing endpoints are enabled
+        * CAUTION: Enabling the testing endpoints in production can be a critical security issue
+        */
+        'environments' => ['local', 'testing'],
+    ],
 ];
