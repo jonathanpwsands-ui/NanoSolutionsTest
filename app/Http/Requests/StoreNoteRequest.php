@@ -27,4 +27,17 @@ class StoreNoteRequest extends FormRequest
             'content' => 'required|min:3'
         ];
     }
+
+    /**
+     * Get custom validation error messages.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'title' => 'Title must be at least 3 characters.',
+            'content' => 'Content must be at least 3 characters.',
+        ];
+    }
 }

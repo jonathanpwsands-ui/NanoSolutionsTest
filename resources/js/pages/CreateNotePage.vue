@@ -80,11 +80,22 @@ export default {
         });
         this.$router.push("/");
       } catch (error) {
-        Notify.create({
-          type: "negative",
-          message: "Failed to create note",
-          position: "top-right"
-        });
+        if (error.response && error.response.status === 422) {
+          const errors = error.response.data.errors;
+          // Find the first non-empty error message
+          const fieldError = Object.values(errors).find(message => message && message.length > 0);
+          Notify.create({
+            type: "negative",
+            message: fieldError || "Failed to create note",
+            position: "top-right"
+          });
+        } else {
+          Notify.create({
+            type: "negative",
+            message: "Failed to create note",
+            position: "top-right"
+          });
+        }
       }
     },
 
