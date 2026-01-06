@@ -104,7 +104,8 @@ export default {
       } catch (error) {
         Notify.create({
           type: "negative",
-          message: "Failed to update note"
+          message: "Failed to update note",
+          position: "top-right"
         });
       }
     },

@@ -80,7 +80,11 @@ export default {
         });
         this.$router.push("/");
       } catch (error) {
-        // Existing error handling
+        Notify.create({
+          type: "negative",
+          message: "Failed to create note",
+          position: "top-right"
+        });
       }
     },
 
