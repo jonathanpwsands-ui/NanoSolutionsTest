@@ -19,8 +19,8 @@
         <!-- Register button -->
         <q-btn label="Register" color="primary" type="submit" />
 
-        <!-- Login button-->
-        <q-btn label="Login" flat color="grey" to="/login" />
+        <!-- Cancel button-->
+        <q-btn label="Cancel" flat color="grey" to="/login" />
       </div>
     </q-form>
   </div>
